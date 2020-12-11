@@ -5,6 +5,7 @@ import (
 	"io"
 	"log"
 	"net"
+	"strings"
 )
 
 func main() {
@@ -49,6 +50,22 @@ func handle(conn net.Conn) {
 	defer upstream.Close()
 
 	log.Println("upstream RemoteAddr", upstream.RemoteAddr())
+
+	var sb strings.Builder
+	b := make([]byte, 1)
+	for {
+		_, err := upstream.Read(b)
+
+		if err != nil {
+			panic(err)
+		}
+		if string(b) == "\n" {
+			break
+		}
+		sb.WriteString(string(b))
+	}
+	serverProtcolVersion := sb.String()
+	log.Println("serverProtcolVersion", serverProtcolVersion)
 
 	upstream.Write([]byte("RFB 003.008\n"))
 
