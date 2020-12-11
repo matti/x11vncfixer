@@ -62,12 +62,14 @@ func handle(conn net.Conn) {
 		if string(b) == "\n" {
 			break
 		}
+
 		sb.WriteString(string(b))
 	}
 	serverProtcolVersion := sb.String()
 	log.Println("serverProtcolVersion", serverProtcolVersion)
 
-	conn.Write([]byte(serverProtcolVersion))
+	conn.Write([]byte(serverProtcolVersion + "\n"))
+
 	upstream.Write([]byte("RFB 003.008\n"))
 
 	upstreamClosed := make(chan struct{}, 1)
