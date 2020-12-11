@@ -67,6 +67,7 @@ func handle(conn net.Conn) {
 	serverProtcolVersion := sb.String()
 	log.Println("serverProtcolVersion", serverProtcolVersion)
 
+	conn.Write([]byte(serverProtcolVersion))
 	upstream.Write([]byte("RFB 003.008\n"))
 
 	upstreamClosed := make(chan struct{}, 1)
