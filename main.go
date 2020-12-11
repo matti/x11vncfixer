@@ -51,6 +51,8 @@ func handle(conn net.Conn) {
 
 	log.Println("upstream RemoteAddr", upstream.RemoteAddr())
 
+	conn.Write([]byte("RFB 003.008\n"))
+
 	var sb strings.Builder
 	b := make([]byte, 1)
 	for {
@@ -67,8 +69,6 @@ func handle(conn net.Conn) {
 	}
 	serverProtcolVersion := sb.String()
 	log.Println("serverProtcolVersion", serverProtcolVersion)
-
-	conn.Write([]byte(serverProtcolVersion + "\n"))
 
 	upstream.Write([]byte("RFB 003.008\n"))
 
