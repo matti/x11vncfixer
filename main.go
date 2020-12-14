@@ -2,13 +2,18 @@ package main
 
 import (
 	"fmt"
-	"io"
 	"log"
 	"net"
+	"os"
 	"strings"
+
+	"github.com/matti/betterio"
 )
 
 func main() {
+	protocolVersion := os.Args[1]
+	upstreamAddress := os.Args[2]
+
 	fmt.Println("listen :5901")
 	ln, err := net.Listen("tcp", "0.0.0.0:5901")
 
@@ -29,17 +34,25 @@ func main() {
 		}
 
 		go func() {
-			log.Println("handling", conn.RemoteAddr().String())
-			handle(conn)
-			log.Println("handled", conn.RemoteAddr().String())
+			log.Println(conn.RemoteAddr().String(), "handling")
+			handle(conn, protocolVersion, upstreamAddress)
+			log.Println(conn.RemoteAddr().String(), "handled")
 		}()
 	}
 }
 
-func handle(conn net.Conn) {
+func handle(conn net.Conn, protocolVersion string, upstreamAddress string) {
 	defer conn.Close()
+	clientProtocolVersionChan := make(chan string, 1)
+	go func() {
+		log.Println(conn.RemoteAddr().String(), "sending protocolVersion", protocolVersion, "to client")
+		conn.Write([]byte(protocolVersion + "\n"))
 
-	upstreamAddress := "localhost:5900"
+		clientProtocolVersion := strings.TrimSpace(string(betterio.ReadBytesUntilRune(conn, '\n')))
+		log.Println(conn.RemoteAddr().String(), "clientProtocolVersion", clientProtocolVersion)
+
+		clientProtocolVersionChan <- clientProtocolVersion
+	}()
 
 	dialer := net.Dialer{}
 	upstream, err := dialer.Dial("tcp", upstreamAddress)
@@ -49,52 +62,14 @@ func handle(conn net.Conn) {
 	}
 	defer upstream.Close()
 
-	log.Println("upstream RemoteAddr", upstream.RemoteAddr())
+	serverProtocolVersionBytes := betterio.ReadBytesUntilRune(upstream, '\n')
 
-	conn.Write([]byte("RFB 003.008\n"))
+	log.Println(conn.RemoteAddr().String(), "serverProtocolVersion", strings.TrimSpace(string(serverProtocolVersionBytes)))
 
-	var sb strings.Builder
-	b := make([]byte, 1)
-	for {
-		_, err := upstream.Read(b)
+	upstream.Write(serverProtocolVersionBytes)
 
-		if err != nil {
-			panic(err)
-		}
-		if string(b) == "\n" {
-			break
-		}
+	<-clientProtocolVersionChan
 
-		sb.WriteString(string(b))
-	}
-	serverProtcolVersion := sb.String()
-	log.Println("serverProtcolVersion", serverProtcolVersion)
-
-	upstream.Write([]byte("RFB 003.008\n"))
-
-	upstreamClosed := make(chan struct{}, 1)
-	clientClosed := make(chan struct{}, 1)
-
-	go broker(upstream, conn, clientClosed)
-	go broker(conn, upstream, upstreamClosed)
-
-	var waitFor chan struct{}
-	select {
-	case <-clientClosed:
-		log.Println("client closed")
-		upstream.Close()
-		waitFor = upstreamClosed
-	case <-upstreamClosed:
-		log.Println("upstream closed")
-		conn.Close()
-		waitFor = clientClosed
-	}
-
-	<-waitFor
-}
-
-func broker(dst, src net.Conn, srcClosed chan struct{}) {
-	io.Copy(dst, src)
-
-	srcClosed <- struct{}{}
+	log.Println(conn.RemoteAddr().String(), "copying")
+	betterio.CopyBidirUntilCloseAndReturnBytesWritten(conn, upstream)
 }

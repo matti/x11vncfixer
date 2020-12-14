@@ -1,5 +1,9 @@
 9fans.net/go v0.0.2/go.mod h1:lfPdxjq9v8pVQXUMBCx5EO5oLXWQFlKRQgs1kEkjoIM=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
+github.com/matti/betterio v0.0.0-20201212103913-e99b43e9606e h1:voQyyWFKffD2x9EAr7hRb4cS7695Rxoi6hblPvGptuw=
+github.com/matti/betterio v0.0.0-20201212103913-e99b43e9606e/go.mod h1:ytTDXxj9xajX5b8hn2U5Vdbm8FfEcVzbol7peZVwoe4=
+github.com/matti/betterio v0.1.0 h1:knvHBqHKcz/8Q34i5MsRKNpMjTJztaX4/1OZpZ01qXw=
+github.com/matti/betterio v0.1.0/go.mod h1:ytTDXxj9xajX5b8hn2U5Vdbm8FfEcVzbol7peZVwoe4=
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/stretchr/objx v0.1.0/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+wExME=
 github.com/stretchr/testify v1.6.1/go.mod h1:6Fq8oRcR53rry900zMqJjRRixrwX3KX962/h/Wwjteg=
